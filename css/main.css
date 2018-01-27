@@ -1,8 +1,8 @@
-#data{
-    max-height: 300px;
-    overflow-y: auto;
+.navbar {
+    background-color: rgb(196, 60, 60) !important;
+    border-color: rgb(196, 60, 60) !important;
 }
 
-.form-control{
-    width: 100%;
+.navbar-brand {
+    color: white !important;
 }
