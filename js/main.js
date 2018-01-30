@@ -8,16 +8,17 @@
  * 
  *********************************************************************************/
 
+// global variable for employee data
 let employeesModal = [];
 
+// methods
 function initializeEmployeesModal() {
     // fetch employee data
     $.get("https://web422-app.herokuapp.com/employees", function (data, status) {
         employeesModal = data;
         refreshEmployeeRows(employeesModal);
-        if (status != "success") {
-            showGenericModal('Error', 'Unable to get Employees');
-        }
+    }).fail(function (){
+        showGenericModal('Error', 'Unable to get Employees');
     });
 }
 
@@ -29,42 +30,44 @@ function showGenericModal(title, message) {
 }
 
 function refreshEmployeeRows(employees) {
-    // create lodash template
+    // create Lodash.js template
     let employeeTemplate = _.template(
         // loop through data
         "<% _.forEach(employees, function(employee) {" +
         // get the id
-        "<% <div class='row body-row' data-id='" +
+        "%> <div class='row body-row' data-id='" +
         "<%- employee._id %>" +
-        "'> %>" +
+        "'>" +
         // get the first name
-        "<% <div class='col-xs-4 body-column'> %>" +
+        "<div class='col-xs-4 body-column'>" +
         "<%- employee.FirstName %>" +
-        "<% </div> %>" +
+        "</div>" +
         // get the last name
-        "<% <div class='col-xs-4 body-column'> %>" +
+        "<div class='col-xs-4 body-column'>" +
         "<%- employee.LastName %>" +
-        "<% </div> %>" +
+        "</div>" +
         // get the position
-        "<% <div class='col-xs-4 body-column'> %>" +
+        "<div class='col-xs-4 body-column'>" +
         "<%- employee.Position.PositionName %>" +
-        "<% </div> %>" +
-        "<% </div> %>" + // close div #_id
-        "}); %>" // close forEach
+        "</div>" +
+        "</div>" + // close div #_id
+        "<% }); %>" // close forEach
     )
-    // populate the data using the template
-    $("#employees-table").event.preventDefault();
-    $("#employees-table").appendChild(
+
+    $("#employees-table").empty().append(
         employeeTemplate({ 'employees': employees })
     );
 }
 
 function getFilteredEmployeesModel(filterString) {
-    return _.filter(employeesModal, {
-        'FirstName': filterString,
-        'LastName': filterString,
-        'Positon.PositionName': filterString
+    let filter = _.filter(employeesModal, function(employee){
+        if ( employee.FirstName.toLowerCase().includes(filterString) ||
+            employee.LastName.toLowerCase().includes(filterString) ||
+            employee.Position.PositionName.toLowerCase().includes(filterString) ) {
+                return employee;
+            }
     });
+    return filter;
 }
 
 function getEmployeeModelById(id) {
@@ -75,9 +78,16 @@ function getEmployeeModelById(id) {
 $(function () {
     // populate data
     initializeEmployeesModal();
-    // react to search-bar query
+    // react to search-bar entry
     $( "#employee-search" ).keyup(function() {
         // refresh area with filtered result
-        refreshEmployeeRows( getFilteredEmployeesModel( $('#employee-search').val() ) );
+        refreshEmployeeRows( getFilteredEmployeesModel( $(this).val() ) );
+    });
+    // react to content clicks
+    $( ".body-row" ).click(function() {
+        console.log("clicked!");
+        let emp = getEmployeeModelById("#data-id");
+        showGenericModal('First Name Last Name', "Test");
+        // convert hire date using Moment.js
     });
 }); // end of DOM ready-handler
