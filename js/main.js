@@ -4,7 +4,7 @@
  * No part of this assignment has been copied manually or electronically from any other source
  * (including web sites) or distributed to other students.
  * 
- * Name: Alexander Mann | Student ID: 131-632-168 | Date: January 28, 2018
+ * Name: Alexander Mann | Student ID: 131-632-168 | Date: January 31, 2018
  * 
  *********************************************************************************/
 
@@ -14,18 +14,24 @@ let employeesModal = [];
 // methods
 function initializeEmployeesModal() {
     // fetch employee data
-    $.get("https://web422-app.herokuapp.com/employees", function (data, status) {
-        employeesModal = data;
-        refreshEmployeeRows(employeesModal);
-    }).fail(function (){
+    $.ajax({
+        url: "https://web422-app.herokuapp.com/employees", 
+        type: "GET",
+        contentType: "application/json"
+    })
+    .done(function (employees) {
+        employeesModal = employees;
+        refreshEmployeeRows(employeesModal);  
+    })
+    .fail(function (err) {
         showGenericModal('Error', 'Unable to get Employees');
     });
 }
 
 function showGenericModal(title, message) {
     // populate and show modal window
-    $(".modal-title").append(JSON.stringify(title));
-    $(".modal-body").append(JSON.stringify(message));
+    $(".modal-title").append(title);
+    $(".modal-body").append(message);
     $("#genericModal").modal("show");
 }
 
@@ -84,10 +90,26 @@ $(function () {
         refreshEmployeeRows( getFilteredEmployeesModel( $(this).val() ) );
     });
     // react to content clicks
-    $( ".body-row" ).click(function() {
-        console.log("clicked!");
-        let emp = getEmployeeModelById("#data-id");
-        showGenericModal('First Name Last Name', "Test");
+    $("#employees-table").on("click", '.row.body-row', function(){
+        let emp = getEmployeeModelById($(this).attr('data-id'));
         // convert hire date using Moment.js
+        let hireDate = emp.HireDate;
+        let mDate = moment(hireDate);
+        mDate = mDate.format('MMMM Do, YYYY');
+        // create Lodash.js template
+        let empTemplate = _.template(
+            '<strong> Address: </strong>' +
+            '<%- emp.AddressStreet %>' + ' <%- emp.AddressCity %>,' + ' <%- emp.AddressState %>' + ' <%- emp.AddressZip %>' +
+            '<br> <strong> Phone Number: </strong>' +
+            '<%- emp.PhoneNum %>' +  ' ext: <%- emp.Extension %>' +
+            '<br> <strong> Hire Date: </strong>' +
+            '<%- mDate %>'
+        )
+        // populate modal window
+        showGenericModal(emp.FirstName + " " + emp.LastName, empTemplate({ 'emp' : emp, mDate }));
     });
+    $('.modal').on('hidden.bs.modal', function (e) {
+        $('.modal-title').empty();
+        $('.modal-body').empty();
+      })
 }); // end of DOM ready-handler
